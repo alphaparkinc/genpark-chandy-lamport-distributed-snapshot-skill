@@ -1,33 +1,35 @@
-"""
-Autonomous Agent Chandy-Lamport Distributed Snapshot Skill
-Pure Python Standard Library implementation.
-"""
-from typing import List, Dict, Any, Set
-
-class ChandyLamportSnapshot:
+class ChandyLamportNode:
     """
-    Chandy-Lamport Global Snapshot & Consistent Cut algorithm.
+    Chandy-Lamport Distributed Snapshot algorithm maintaining node local state
+    and recording inflight channel messages upon marker arrival.
     """
-    def __init__(self, nodes: List[str], initial_balances: Dict[str, float]):
-        self.nodes = nodes
-        self.balances = dict(initial_balances)
-        self.recorded_node_state = {}
-        self.recorded_channel_state = {}
-        self.marker_seen = set()
+    def __init__(self, node_id, channels):
+        self.node_id = node_id
+        self.channels = {c: [] for c in channels}
+        self.local_state = 100
+        self.has_recorded_state = False
+        self.channel_recording = {c: False for c in channels}
+        self.recorded_channel_msgs = {c: [] for c in channels}
 
-    def record_snapshot(self, initiator: str) -> Dict[str, Any]:
-        self.recorded_node_state[initiator] = self.balances[initiator]
-        self.marker_seen.add(initiator)
+    def start_snapshot(self):
+        self.has_recorded_state = True
+        for c in self.channels:
+            self.channel_recording[c] = True
+        return "MARKER"
 
-        for n in self.nodes:
-            if n not in self.marker_seen:
-                self.recorded_node_state[n] = self.balances[n]
-                self.marker_seen.add(n)
+    def receive_marker(self, channel_id):
+        if not self.has_recorded_state:
+            self.has_recorded_state = True
+            self.channel_recording[channel_id] = False
+            for c in self.channels:
+                if c != channel_id:
+                    self.channel_recording[c] = True
+            return "FORWARD_MARKER"
+        else:
+            self.channel_recording[channel_id] = False
+            return "SNAPSHOT_CHANNEL_CLOSED"
 
-        total_recorded = sum(self.recorded_node_state.values())
-        return {
-            "node_states": dict(self.recorded_node_state),
-            "total_system_wealth": round(total_recorded, 4),
-            "consistent_cut": True,
-            "nodes_captured": len(self.recorded_node_state)
-        }
+    def receive_message(self, channel_id, msg):
+        if self.channel_recording.get(channel_id, False):
+            self.recorded_channel_msgs[channel_id].append(msg)
+        self.local_state += msg
