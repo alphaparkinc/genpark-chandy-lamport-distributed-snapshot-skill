@@ -1,17 +1,17 @@
 {
   "name": "genpark-chandy-lamport-distributed-snapshot-skill",
   "version": "1.0.0",
-  "description": "Autonomous Agent Chandy-Lamport Global Snapshot & Consistent Cut State Recording Engine",
-  "entry_point": "client.py",
-  "example": "example_usage.py",
+  "description": "Chandy-Lamport distributed global state snapshot algorithm using marker messages over FIFO channels to capture consistent states without downtime.",
+  "main": "client.py",
   "mcp_server": "mcp_server.py",
-  "dependencies": [],
-  "tags": [
+  "topics": [
     "genpark-skill",
     "agentic-ai",
-    "distributed-systems",
     "chandy-lamport",
-    "distributed-snapshots",
-    "consistent-cut"
-  ]
+    "distributed-snapshot",
+    "consistent-cut",
+    "global-state",
+    "distributed-systems"
+  ],
+  "dependencies": []
 }
